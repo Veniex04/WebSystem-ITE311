@@ -9,37 +9,31 @@ class CreateUsersTable extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'          => [
+            'id' => [
                 'type'           => 'INT',
+                'constraint'     => 11,
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'name'        => [
+            'name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
             ],
-            'email'       => [
+            'email' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
                 'unique'     => true,
             ],
-            'password'    => [
+            'password' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'role'        => [
-                'type'       => 'ENUM',
-                'constraint' => ['student', 'instructor', 'admin'],
+            'role' => [
+                'type'       => 'ENUM("student","instructor","admin")',
                 'default'    => 'student',
             ],
-            'created_at'  => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
-            'updated_at'  => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
+            'created_at DATETIME DEFAULT CURRENT_TIMESTAMP',
+            'updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
         ]);
 
         $this->forge->addKey('id', true);
