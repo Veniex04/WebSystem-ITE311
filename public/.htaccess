@@ -1,0 +1,13 @@
+# Disable directory browsing
+Options -Indexes
+
+# Follow symbolic links
+Options +FollowSymLinks
+
+# Turn on the rewrite engine
+RewriteEngine On
+
+# If the requested file or directory doesn't exist, send the request to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [QSA,L]

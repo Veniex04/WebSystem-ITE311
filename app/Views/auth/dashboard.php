@@ -246,6 +246,51 @@
         <!-- Main panels -->
         <div class="row mt-4">
             <?php if ($displayRole === 'admin'): ?>
+                <!-- Admin Course Management -->
+                <div class="col-12 mb-3">
+                    <div class="card p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="mb-0"><i class="bi bi-folder2-open"></i> Course Materials Management</h5>
+                            <a href="<?= site_url('admin/course-management') ?>" class="btn btn-gradient">
+                                <i class="bi bi-gear"></i> Manage Course Materials
+                            </a>
+                        </div>
+                        <p class="text-muted mb-3">Upload and manage course materials for all courses. Students can view and download materials from their enrolled courses.</p>
+                        
+                        <?php if (!empty($courses)): ?>
+                            <div class="row">
+                                <?php foreach (array_slice($courses, 0, 3) as $course): ?>
+                                    <div class="col-md-4 mb-2">
+                                        <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
+                                            <div>
+                                                <div class="fw-semibold"><?= esc($course['title']) ?></div>
+                                                <small class="text-muted">
+                                                    <?php 
+                                                    $materialsCount = 0;
+                                                    if (isset($course['materials_count'])) {
+                                                        $materialsCount = $course['materials_count'];
+                                                    }
+                                                    echo $materialsCount . ' materials';
+                                                    ?>
+                                                </small>
+                                            </div>
+                                            <a href="<?= site_url('materials/upload/' . $course['id']) ?>" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-upload"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center py-3">
+                                <i class="bi bi-folder-x text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mt-2">No courses available</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <!-- Admin System Overview -->
                 <div class="col-12 mb-3">
                     <div class="card p-3">
@@ -362,8 +407,23 @@
                             <?php if (!empty($enrolledCourses)): ?>
                                 <?php foreach ($enrolledCourses as $course): ?>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <?= esc($course['title'] ?? $course['name'] ?? 'Unknown Course') ?>
-                                        <small class="text-muted"><?= isset($course['enrollment_date']) ? date('M d, Y', strtotime($course['enrollment_date'])) : '' ?></small>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold"><?= esc($course['title'] ?? $course['name'] ?? 'Unknown Course') ?></div>
+                                            <small class="text-muted">
+                                                Enrolled <?= isset($course['enrolled_at']) ? date('M d, Y', strtotime($course['enrolled_at'])) : '' ?>
+                                                <?php if (isset($course['materials_count'])): ?>
+                                                    • <?= $course['materials_count'] ?> material<?= $course['materials_count'] !== 1 ? 's' : '' ?>
+                                                <?php endif; ?>
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="<?= site_url('materials/list/' . $course['id']) ?>" 
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="View Materials">
+                                                <i class="bi bi-folder2-open"></i>
+                                                Materials
+                                            </a>
+                                        </div>
                                     </li>
                                 <?php endforeach; ?>
                             <?php else: ?>

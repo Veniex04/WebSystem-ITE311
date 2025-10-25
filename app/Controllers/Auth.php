@@ -170,11 +170,21 @@ class Auth extends BaseController
 
                 if ($db->query("SHOW TABLES LIKE 'enrollments'")->getNumRows() > 0) {
                     $enrolledCourses = $db->table('enrollments')
-                        ->select('courses.id, courses.title, courses.description')
+                        ->select('courses.id, courses.title, courses.description, enrollments.enrolled_at')
                         ->join('courses', 'enrollments.course_id = courses.id')
                         ->where('enrollments.user_id', $userId)
                         ->get()
                         ->getResultArray();
+
+                    // Add materials count for each enrolled course
+                    if ($db->query("SHOW TABLES LIKE 'materials'")->getNumRows() > 0) {
+                        foreach ($enrolledCourses as &$course) {
+                            $materialsCount = $db->table('materials')
+                                ->where('course_id', $course['id'])
+                                ->countAllResults();
+                            $course['materials_count'] = $materialsCount;
+                        }
+                    }
 
                     $enrolledIds = array_column($enrolledCourses, 'id');
                     $courses = array_filter($courses, fn($c) => !in_array($c['id'], $enrolledIds));
@@ -199,5 +209,59 @@ class Auth extends BaseController
         ];
 
         return view('auth/dashboard', $data);
+    }
+
+    /**
+     * Course Materials Management for Admin
+     * 
+     * @return mixed
+     */
+    public function courseManagement()
+    {
+        $session = session();
+
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/auth/login')->with('error', 'Please login first.');
+        }
+
+        $userRole = strtolower($session->get('user_role'));
+        
+        // Only admins can access course management
+        if ($userRole !== 'admin') {
+            return redirect()->to('/dashboard')->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        $db = \Config\Database::connect();
+        $userModel = new UserModel();
+
+        // Get all courses with instructor information
+        $courses = [];
+        if ($db->query("SHOW TABLES LIKE 'courses'")->getNumRows() > 0) {
+            $courses = $db->table('courses')
+                ->select('courses.*, users.name as instructor_name')
+                ->join('users', 'users.id = courses.instructor_id', 'left')
+                ->orderBy('courses.created_at', 'DESC')
+                ->get()
+                ->getResultArray();
+        }
+
+        // Get materials count for each course
+        if ($db->query("SHOW TABLES LIKE 'materials'")->getNumRows() > 0) {
+            foreach ($courses as &$course) {
+                $materialsCount = $db->table('materials')
+                    ->where('course_id', $course['id'])
+                    ->countAllResults();
+                $course['materials_count'] = $materialsCount;
+            }
+        }
+
+        $data = [
+            'title' => 'Course Materials Management',
+            'user_name' => $session->get('user_name'),
+            'user_role' => $userRole,
+            'courses' => $courses,
+        ];
+
+        return view('admin/course_management', $data);
     }
 }
